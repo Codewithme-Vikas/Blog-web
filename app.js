@@ -30,8 +30,10 @@ app.use(fileUpload({ useTempFiles: true, tempFileDir: '/tmp/' }));
 
 // *************** Routes *******************
 const authRoute = require("./routes/auth");
+const categoryRoute = require("./routes/category");
 
 app.use("/api/v1", authRoute);
+app.use("/api/v1", categoryRoute);
 
 
 

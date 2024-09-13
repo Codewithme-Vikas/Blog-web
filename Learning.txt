@@ -1,2 +1,6 @@
 1. If we use ...params , we will get the array includes all parameters <- although we pass comma sepreated arguments
         implement -> authorizeRoles(...roles)
+
+2. Calling the API sequence matters a lot , scpecially when case of params in the api
+    -> /all is also understand as the params (/category/:id) , so be caution
+        implement ->  getCategories & getCategory API calling
