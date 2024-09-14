@@ -1,3 +1,4 @@
+const crypto = require("node:crypto");
 const bcrypt = require("bcrypt");
 const cloudinary = require("cloudinary");
 
@@ -7,6 +8,7 @@ const Otp = require("../models/Otp")
 const { generateOTP, allowFileType } = require("../utils/helperFun");
 const sendEmail = require("../utils/sendEmail");
 const otpTemplate = require("../templates/otpTemplate");
+const resetPasswordTemplate = require("../templates/resetPasswordTemplate");
 
 
 // ******************* Send OTP **********************
@@ -42,6 +44,7 @@ exports.sendOTP = async (req, res) => {
         })
     }
 }
+
 
 // ******************* SignUp **********************
 exports.signup = async (req, res) => {
@@ -162,7 +165,7 @@ exports.login = async (req, res) => {
         }
 
         // comapre enteredPassword
-        const isAuthentic = userDoc.comparePassword(enteredPassword);
+        const isAuthentic = await userDoc.comparePassword(enteredPassword);
 
         if (!isAuthentic) {
             return res.status(400).json({ success: false, message: "Password is not matched" });
@@ -192,5 +195,172 @@ exports.login = async (req, res) => {
             sucess: false,
             message: error.message
         })
+    }
+}
+
+
+
+
+// ***************** Forget Password *****************
+exports.forgetPassword = async( req, res)=>{
+    try {
+        const { username } = req.body;
+
+        if( !username ){
+            return res.status(400).json({success : false,message : "Please provide username"});
+        }
+
+        // is user exists
+        const user = await User.findOne({username});
+
+        if( !user ){
+            return res.status(400).json({success : false,message : "User is not exists!"});
+        }
+
+        // generate a reset Password token - [ Weird , pata nahi kyu getResetPasswordToken likhne per kam kyu nahi kar raha ha]
+        const resetToken = user.getResetPassword();
+
+        // Save the user document to persist the changes
+        await user.save({ validateBeforeSave: false }); // Use validateBeforeSave: false to skip any other validation rules
+
+        // reset url
+        const resetPasswordUrl = `https://${req.get("host")}/password/reset/${resetToken}`;
+
+        // Think : also send userId in the resetPassword url
+        // const resetPasswordUrl = `https://yourapp.com/reset-password?token=${token}&user=${userId}`;
+
+        // send email with UI url
+        try {
+            await sendEmail(user.email,"Reset Password Link",resetPasswordTemplate(resetPasswordUrl) );
+        } catch (error) {
+            user.resetPasswordToken = undefined;
+            user.resetPasswordExpire = undefined;
+            throw Error("failed to send email!");
+        }
+
+        return res.status(200).json({
+            success : true,
+            message : "Reset Password link is sent",
+        });
+
+    } catch (error) {
+        console.log("API Error....................! in forget password controller", error);
+        return res.status(500).json({
+            success : false,
+            message : "Couldn't get the reset passsword token",
+            error : error.message
+        });
+    }
+}
+
+
+// ***************** Reset Password *****************
+exports.resetPassword = async( req, res)=>{
+    try {
+        const { token } = req.params;
+        const { password, confirmPassword } = req.body;
+
+        if( !token || !password ){
+            return res.status(400).json({success : false,message : "Please provide required fields!"});
+        }
+
+        // is passwords matched
+        if( password !== confirmPassword ){
+            return res.status(400).json({success : false,message : "Passwords are not matched!"});
+        }
+
+        // hash the reset password token -> to match    [ increase security]
+        const hashedPasswordToken = crypto.createHash('sha256').update(token).digest("hex");
+        
+        // is user exists
+        const user = await User.findOne({
+            resetPasswordToken : hashedPasswordToken,
+            resetPasswordExpire :  { $gt : Date.now() }
+        });
+
+        if( !user ){
+            return res.status(400).json({success : false,message : "Invalid reset password token or token expire!"});
+        }
+
+        // hash the password
+        const hashPassword = await bcrypt.hash(password, 10);
+
+        // reset the password
+        await User.findByIdAndUpdate(user._id, {
+            $set : {
+                password : hashPassword,
+                resetPasswordExpire : null,
+                resetPasswordToken : null,
+            }
+        }, { new : true });
+
+        return res.status(200).json({
+            success : true,
+            message : "Password reset successfully",
+            user
+        });
+
+    } catch (error) {
+        console.log("API Error....................! in reset password controller", error);
+        return res.status(500).json({
+            success : false,
+            message : "Couldn't get the reset passsword",
+            error : error.message
+        });
+    }
+}
+
+
+// **************** Update Password ******************
+exports.updatePassword = async( req, res)=>{
+    try {
+        const { userId, oldPassword, newPassword, confirmPassword } = req.body;
+
+        if( !userId || !oldPassword || !newPassword || !confirmPassword ){
+            return res.status(400).json({success : false,message : "Please provide required fields!"});
+        }
+
+        // is entered passwords matched
+        if( newPassword !== confirmPassword ){
+            return res.status(400).json({success : false,message : "Entered passwords are not matched!"});
+        }
+
+        // is User exists
+        const user = await User.findById({_id : userId});
+
+        // Good pratice  : Not expose the reason of failure
+        if( !user ){
+            return res.status(400).json({success : false,message : "User is not found!"});
+        }
+
+        // is password match
+        const isAuthentic = await user.comparePassword(oldPassword);
+        if( !isAuthentic ){
+            return res.status(400).json({success : false,message : "Invalid Password!"});
+        }
+        
+        const hashPassword = await bcrypt.hash(newPassword, 10);
+
+        // update password
+        await User.findByIdAndUpdate(userId,{
+            $set : {
+                password : hashPassword
+            }
+        });
+
+        // Good to do : hide the user password when expose to others
+        return res.status(200).json({
+            success : true,
+            message : "Password changed successfully",
+            user
+        });
+
+    } catch (error) {
+        console.log("API Error....................! in change password controller", error);
+        return res.status(500).json({
+            success : false,
+            message : "Couldn't get the change password",
+            error : error.message
+        });
     }
 }

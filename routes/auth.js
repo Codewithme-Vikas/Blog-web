@@ -3,8 +3,10 @@ const express = require("express");
 const router = express.Router();
 
 
+const { sendOTP, signup, login, forgetPassword, resetPassword, updatePassword } = require("../controllers/Auth");
+const { isAuthenticated } = require("../middlewares/Auth");
+
 // ************************* Auth APIs **********************
-const { sendOTP, signup, login } = require("../controllers/Auth");
 
 router.post("/sendOTP", sendOTP);
 
@@ -13,12 +15,11 @@ router.post("/signup", signup);
 router.post("/login", login );
 
 
+router.route("/password/forget").post(forgetPassword);
 
-// router.get("/password/resetToken/:userId", resetPasswordToken);
+router.route("/password/reset/:token").put(resetPassword);
 
-// router.post("/password/reset", resetPassword);
-
-// router.post("/password/update", isAuthenticatedUser, updatePassword);
+router.route("/password/update").put(isAuthenticated, updatePassword);
 
 // -------------------------------------------------------------
 

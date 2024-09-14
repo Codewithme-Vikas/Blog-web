@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const crypto = require("node:crypto");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
@@ -34,6 +35,11 @@ const userSchema = new mongoose.Schema({
 
     followers: [{ type:  mongoose.Schema.Types.ObjectId, ref: 'User' }],
     following: [{ type:  mongoose.Schema.Types.ObjectId, ref: 'User' }], // jinko follow karte he 
+
+
+    // for reset password purpose
+    resetPasswordToken : String,
+    resetPasswordExpire : Date,
 }, {
     timestamps: true
 });
@@ -53,6 +59,7 @@ userSchema.methods.comparePassword = async function (enteredPassword) {
     return await bcrypt.compare(enteredPassword, this.password)
 }
 
+// genrate a jsonwebtoken
 userSchema.methods.getJWTToken = function () {
     return jwt.sign(
         { id: this._id, username: this.username, role: this.role },
@@ -61,10 +68,17 @@ userSchema.methods.getJWTToken = function () {
     )
 }
 
-userSchema.methods.resetPasswordToken = function () {
-    // generate a resetpassword token
+// generate a Reset Password Token
+userSchema.methods.getResetPassword = function () {
+    const resetToken = crypto.randomBytes(32).toString('hex'); // 32 bytes buffer & Convert to hex format for a URL-friendly token
+
+    // Hash the token using SHA-256 before storing it in the database
+    
+    // Note - those changes aren't automatically persisted to the database until you explicitly save the document.
+    this.resetPasswordToken =  crypto.createHash('sha256').update(resetToken).digest('hex');
+    this.resetPasswordExpire = Date.now() + 24*60*60*1000; // 1 day
+
+    return resetToken; // send the un-hashed token 
 }
-
-
 
 module.exports = mongoose.model("User", userSchema);

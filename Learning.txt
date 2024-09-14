@@ -4,3 +4,12 @@
 2. Calling the API sequence matters a lot , scpecially when case of params in the api
     -> /all is also understand as the params (/category/:id) , so be caution
         implement ->  getCategories & getCategory API calling
+
+3. how to get the host url - req.get("host")
+    implement -> forgetPassword controller
+
+4. if reset password link is not sent , just undefined the resetPasswordToken & expire in user <- for security
+    implement -> forgetPassword controller
+
+
+5. set the db fields - as undefined & null -> what is difference { read in deapth }
