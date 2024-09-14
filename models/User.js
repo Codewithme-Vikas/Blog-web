@@ -28,6 +28,8 @@ const userSchema = new mongoose.Schema({
 
     role: { type: String, enum: ['user', 'admin'], required: [true, "Please provide role of user"] },
 
+    profile : { type : mongoose.Schema.Types.ObjectId, ref : 'Profile'},
+
     posts: [{ type:  mongoose.Schema.Types.ObjectId, ref: 'Post' }],
     bookMarks: [{ type:  mongoose.Schema.Types.ObjectId, ref: 'Post' }],
 

@@ -6,9 +6,8 @@ const profileSchema = new mongoose.Schema({
     dateOfBirth : { type : Date},
     bio : { type : String },
     company : { type : String },
-    imageUrl : { type : String },
+        
     
-
     // To Do : think more about this -[ save seprate ids or just in one object ]
     socialMedia : [{type : String}], // {twitter : "ala", website : "tuhi"}
 

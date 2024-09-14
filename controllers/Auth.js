@@ -4,6 +4,7 @@ const cloudinary = require("cloudinary");
 
 const User = require("../models/User");
 const Otp = require("../models/Otp")
+const Profile = require("../models/Profile");
 
 const { generateOTP, allowFileType } = require("../utils/helperFun");
 const sendEmail = require("../utils/sendEmail");
@@ -119,6 +120,18 @@ exports.signup = async (req, res) => {
             password : hashPassword,
             role,
         });
+
+        // create the user profile & insert this profile Id into user
+        const userProfile = await Profile.create({
+            user : userDoc._id
+        });
+
+        await User.findByIdAndUpdate(userDoc._id,{
+            $set : {
+                profile : userProfile._id
+            }
+        },{new : true});
+
 
         userDoc.password = undefined; // For security purpose
 
