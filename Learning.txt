@@ -13,3 +13,6 @@
 
 
 5. set the db fields - as undefined & null -> what is difference { read in deapth }
+
+6. Empty array treated as true in just
+        implement -> getAllPosts controller

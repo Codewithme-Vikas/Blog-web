@@ -38,7 +38,7 @@ exports.getUserDetails = async(req,res)=>{
 // **************************** Update Profile *******************************
 exports.updateProfile = async(req,res)=>{
     try {
-        const { user } = req.user;
+        const user = req.user;
         const { dateOfBirth , bio, company } = req.body;
         const avatar = req.files;
         console.log( avatar , "avtar data");

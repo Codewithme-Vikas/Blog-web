@@ -29,11 +29,13 @@ app.use(cors()); // open to everyone
 app.use(fileUpload({ useTempFiles: true, tempFileDir: '/tmp/' }));
 
 // *************** Routes *******************
-const authRoute = require("./routes/auth");
+const userRoute = require("./routes/user");
 const categoryRoute = require("./routes/category");
+const postRoute = require("./routes/post");
 
-app.use("/api/v1", authRoute);
+app.use("/api/v1", userRoute);
 app.use("/api/v1", categoryRoute);
+app.use("/api/v1", postRoute);
 
 
 
