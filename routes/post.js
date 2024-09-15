@@ -2,10 +2,11 @@ const express = require("express");
 
 const router = express.Router();
 
-const { createPost, getAllPosts, getPostDetail, updatePost, deletePost } = require("../controllers/Post");
-const { createComment, getPostAllComments, updateComment, deleteComment, adminDeleteComment, upVoteComment,downVoteComment } = require("../controllers/Comment");
+const { createPost, getAllPosts, getPostDetail, updatePost, deletePost, upVotePost, downVotePost,adminDeletePost } = require("../controllers/Post");
+const { createComment, getPostAllComments, updateComment, deleteComment, upVoteComment,downVoteComment, adminDeleteComment } = require("../controllers/Comment");
 const { isAuthenticated, authorizeRoles } = require("../middlewares/Auth");
-// ******************************* APIs *******************************
+
+// ******************************* Post APIs *******************************
 
 router.route("/post/create").post(createPost);
 
@@ -16,10 +17,14 @@ router.route("/post/:id")
     .put(isAuthenticated, updatePost)
     .delete(isAuthenticated, deletePost);
 
+router.route("/post/:id/upvote").get(isAuthenticated,upVotePost);
+
+router.route("/post/:id/downvote").get(isAuthenticated,downVotePost);
+
 // ^^^^^^^^^^^ Admin Dashboard ^^^^^^^^^^^
-// router.route("/post/:id")
-//         .get(isAuthenticated,authorizeRoles("admin"), postDetailGet )
-//         .delete( isAuthenticated,authorizeRoles("admin"), postDelete);
+router.route("/post/:id")
+        // .get(isAuthenticated,authorizeRoles("admin"), postDetailGet )
+        .delete( isAuthenticated,authorizeRoles("admin"), adminDeletePost)
 
 // --------------------------------------------------------------------------------------------
 

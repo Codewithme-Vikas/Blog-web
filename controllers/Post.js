@@ -1,6 +1,7 @@
 const Post = require("../models/Post");
 const User = require("../models/User");
 const Category = require("../models/Category");
+const Comment = require("../models/Comment");
 
 
 // ********************* Create Post ******************************
@@ -203,6 +204,107 @@ exports.deletePost = async(req,res)=>{
             success : false,
             message : "Couldn't delete post",
             error : error.message
+        });
+    }
+}
+
+
+// ****************************** upVote Post ************************************
+exports.upVotePost = async (req, res) => {
+    try {
+        const { id } = req.params; // post Id
+
+        // Future : a user only can upVote post by single time(by 1) <-- for now this burden(implemention) is taken by frontend side
+
+        // increase upVote by 1
+        const post = await Post.findByIdAndUpdate(id, {
+            $inc: { upVote: 1 }
+        }, { new: true });
+
+        if (!post) {
+            return res.status(400).json({ success: false, message: "Post not found" });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "Post upVoted successfully",
+            upVote: post.upVote
+        });
+
+    } catch (error) {
+        console.log("API Error.................! in upVote post controller", error);
+        return res.status(500).json({
+            success: false,
+            message: "Couldn't upVote post",
+            error: error.message
+        });
+    }
+}
+
+// ****************************** downVote Post ************************************
+exports.downVotePost =  async (req, res) => {
+    try {
+        const { id } = req.params; // post Id
+
+        // Future : a user only can upVote post by single time(by 1) <-- for now this burden(implemention) is taken by frontend side
+
+        // decrease upVote by 1
+        const post = await Post.findByIdAndUpdate(id, {
+            $inc: { upVote: -1 }
+        }, { new: true });
+
+        if (!post) {
+            return res.status(400).json({ success: false, message: "Post not found" });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "Post downVoted successfully",
+            upVote: post.upVote
+        });
+
+    } catch (error) {
+        console.log("API Error.................! in downVote post controller", error);
+        return res.status(500).json({
+            success: false,
+            message: "Couldn't downVote post",
+            error: error.message
+        });
+    }
+}
+
+
+
+
+// ^^^^^^@^^^^^^^^^^^^^^^@^^^^^^^^^^^^^^^^ Admin Panel ^^^^^^@^^^^^^^^^^^^^^^@^^^^^^^^^^^^^^^^
+
+// ****************************** Delete Post By Admin************************************
+exports.adminDeletePost = async (req, res) => {
+    try {
+        const { id } = req.params; // post Id
+
+        const post = await Post.findByIdAndDelete(id);
+
+        if (!post) {
+            return res.status(400).json({ success: true, message: "Post not found" });
+        }
+
+        // delete post's comment
+        await Comment.deleteMany({post : post._id}).exec();
+
+
+        return res.status(200).json({
+            success: true,
+            message: "Post deleted successfully by admin",
+            post
+        });
+        
+    } catch (error) {
+        console.log("API Error.................! in admin delete post controller", error);
+        return res.status(500).json({
+            success: false,
+            message: "Couldn't delete post",
+            error: error.message
         });
     }
 }
