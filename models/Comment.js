@@ -7,6 +7,8 @@ const commentSchema = new mongoose.Schema({
 
     comment : { type : String, required  : [true, "Write some content"] , trim : true},
 
+    upVote : { type : Number, default : 0},
+
 },{
     timestamps : true
 });
