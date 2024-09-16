@@ -2,6 +2,10 @@ const Post = require("../models/Post");
 const User = require("../models/User");
 const Category = require("../models/Category");
 const Comment = require("../models/Comment");
+const sendEmail = require("../utils/sendEmail");
+
+const postCreatedTemplate = require("../templates/post/postCreatedTemplate");
+const postDeleteTemplate = require("../templates/post/postDeleteTemplate");
 
 
 // ********************* Create Post ******************************
@@ -30,10 +34,14 @@ exports.createPost = async(req,res)=>{
             $push : { posts : post._id}
         });
 
+
+        // send email to writer
+        await sendEmail(user.email,"New post created", postCreatedTemplate(post.title,post.createdAt) );
+
         
         return res.status(200).json({
             success : true,
-            message : "Create post successfully",
+            message : "Post created successfully",
             post
         });
 
@@ -191,6 +199,7 @@ exports.deletePost = async(req,res)=>{
 
         // Future to do:- destroy the thumbnail on the cloud
         
+        await sendEmail(user.email,"Post delete", postDeleteTemplate(post.title,post.createdAt) );
         
         return res.status(200).json({
             success : true,

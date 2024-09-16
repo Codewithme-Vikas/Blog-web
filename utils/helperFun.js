@@ -12,3 +12,12 @@ exports.generateOTP = (length) => {
     }
     return otp;
 }
+
+// Format Date
+exports.formatDate = (date)=>{
+    return date.toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric'
+    });
+}
